@@ -128,6 +128,9 @@ certain large transactions](https://github.com/lightningnetwork/lnd/pull/7100).
 * [Update cert module](https://github.com/lightningnetwork/lnd/pull/6573) to
   allow a way to update the tls certificate without restarting lnd.
 
+* [Migrated from go-fuzz to Go 1.18's new standard fuzz testing
+  library](https://github.com/lightningnetwork/lnd/pull/6784).
+
 ## `lncli`
 * [Add an `insecure` flag to skip tls auth as well as a `metadata` string slice
   flag](https://github.com/lightningnetwork/lnd/pull/6818) that allows the
@@ -220,6 +223,7 @@ to refactor the itest for code health and maintenance.
 # Contributors (Alphabetical Order)
 
 * Carla Kirk-Cohen
+* Conner Babinchak
 * cutiful
 * Daniel McNally
 * Elle Mouton
