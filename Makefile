@@ -228,7 +228,7 @@ flakehunter-parallel:
 # FUZZING
 # =============
 
-fuzz: $(GOFUZZ_BIN)
+fuzz-run:
 	@$(call print, "Fuzzing packages '$(FUZZPKG)'.")
 	scripts/fuzz.sh run "$(FUZZPKG)" "$(FUZZ_TEST_RUN_TIME)" "$(FUZZ_NUM_PROCESSES)" 
 
