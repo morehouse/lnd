@@ -685,6 +685,80 @@ func TestLightningWireProtocol(t *testing.T) {
 
 			v[0] = reflect.ValueOf(req)
 		},
+
+		// nolint:lll
+		MsgAcceptChannel2: func(v []reflect.Value, r *rand.Rand) {
+			req := AcceptChannel2{
+				FundingAmount:    btcutil.Amount(r.Int63()),
+				DustLimit:        btcutil.Amount(r.Int63()),
+				MaxValueInFlight: MilliSatoshi(r.Int63()),
+				HtlcMinimum:      MilliSatoshi(r.Int31()),
+				MinAcceptDepth:   uint32(r.Int31()),
+				CsvDelay:         uint16(r.Int31()),
+				MaxAcceptedHTLCs: uint16(r.Int31()),
+			}
+
+			if _, err := r.Read(req.PendingChannelID[:]); err != nil {
+				t.Fatalf("unable to generate pending chan id: %v", err)
+				return
+			}
+
+			var err error
+			req.FundingKey, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+			req.RevocationPoint, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+			req.PaymentPoint, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+			req.DelayedPaymentPoint, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+			req.HtlcPoint, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+			req.FirstCommitmentPoint, err = randPubKey()
+			if err != nil {
+				t.Fatalf("unable to generate key: %v", err)
+				return
+			}
+
+			// 1/2 chance empty TLV records.
+			if r.Intn(2) == 0 {
+				req.UpfrontShutdownScript, err = randDeliveryAddress(r)
+				if err != nil {
+					t.Fatalf("unable to generate delivery address: %v", err)
+					return
+				}
+
+				req.ChannelType = new(ChannelType)
+				*req.ChannelType = ChannelType(*randRawFeatureVector(r))
+
+				req.LeaseExpiry = new(LeaseExpiry)
+				*req.LeaseExpiry = LeaseExpiry(1337)
+			} else {
+				req.UpfrontShutdownScript = []byte{}
+			}
+
+			// 1/2 chance additional TLV data.
+			if r.Intn(2) == 0 {
+				req.ExtraData = []byte{0xfd, 0x00, 0xff, 0x00}
+			}
+
+			v[0] = reflect.ValueOf(req)
+		},
 		MsgCommitSig: func(v []reflect.Value, r *rand.Rand) {
 			req := NewCommitSig()
 			if _, err := r.Read(req.ChanID[:]); err != nil {
@@ -1115,6 +1189,12 @@ func TestLightningWireProtocol(t *testing.T) {
 		{
 			msgType: MsgOpenChannel2,
 			scenario: func(m OpenChannel2) bool {
+				return mainScenario(&m)
+			},
+		},
+		{
+			msgType: MsgAcceptChannel2,
+			scenario: func(m AcceptChannel2) bool {
 				return mainScenario(&m)
 			},
 		},
