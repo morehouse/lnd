@@ -672,6 +672,8 @@ func TestLightningWireProtocol(t *testing.T) {
 				req.ChannelType = new(ChannelType)
 				*req.ChannelType = ChannelType(*randRawFeatureVector(r))
 
+				req.RemoteSigsFirst = true
+
 				req.LeaseExpiry = new(LeaseExpiry)
 				*req.LeaseExpiry = LeaseExpiry(1337)
 			} else {

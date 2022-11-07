@@ -120,6 +120,13 @@ type OpenChannel2 struct {
 	// open.
 	ChannelType *ChannelType
 
+	// RemoteSigsFirst specifies that the non-initiator must send their
+	// funding transaction signatures before the initiator will send theirs.
+	// This allows the initiator to batch multiple v2 channel opens into a
+	// single funding transaction but exposes the non-initiator to potential
+	// griefing attacks.
+	RemoteSigsFirst RemoteSigsFirst
+
 	// LeaseExpiry represents the absolute expiration height of a channel
 	// lease. This is a custom TLV record that will only apply when a leased
 	// channel is being opened using the script enforced lease commitment
@@ -145,12 +152,13 @@ var _ Message = (*OpenChannel2)(nil)
 // Encode serializes the target OpenChannel2 into the passed io.Writer
 // implementation. Serialization will observe the rules defined by the passed
 // protocol version.
-//
-// nolint:dupl
 func (o *OpenChannel2) Encode(w *bytes.Buffer, pver uint32) error {
 	recordProducers := []tlv.RecordProducer{&o.UpfrontShutdownScript}
 	if o.ChannelType != nil {
 		recordProducers = append(recordProducers, o.ChannelType)
+	}
+	if o.RemoteSigsFirst {
+		recordProducers = append(recordProducers, &o.RemoteSigsFirst)
 	}
 	if o.LeaseExpiry != nil {
 		recordProducers = append(recordProducers, o.LeaseExpiry)
@@ -277,11 +285,13 @@ func (o *OpenChannel2) Decode(r io.Reader, pver uint32) error {
 	// Next we'll parse out the set of known records, keeping the raw tlv
 	// bytes untouched to ensure we don't drop any bytes erroneously.
 	var (
-		chanType    ChannelType
-		leaseExpiry LeaseExpiry
+		chanType        ChannelType
+		leaseExpiry     LeaseExpiry
+		remoteSigsFirst RemoteSigsFirst
 	)
 	typeMap, err := tlvRecords.ExtractRecords(
-		&o.UpfrontShutdownScript, &chanType, &leaseExpiry,
+		&o.UpfrontShutdownScript, &chanType, &remoteSigsFirst,
+		&leaseExpiry,
 	)
 	if err != nil {
 		return err
@@ -290,6 +300,9 @@ func (o *OpenChannel2) Decode(r io.Reader, pver uint32) error {
 	// Set the corresponding TLV types if they were included in the stream.
 	if val, ok := typeMap[ChannelTypeRecordType]; ok && val == nil {
 		o.ChannelType = &chanType
+	}
+	if val, ok := typeMap[RemoteSigsFirstRecordType]; ok && val == nil {
+		o.RemoteSigsFirst = remoteSigsFirst
 	}
 	if val, ok := typeMap[LeaseExpiryRecordType]; ok && val == nil {
 		o.LeaseExpiry = &leaseExpiry
