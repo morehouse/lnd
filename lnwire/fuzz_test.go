@@ -78,6 +78,7 @@ func FuzzAcceptChannel(f *testing.F) {
 
 		msg, err := ReadMessage(r, 0)
 		if err != nil {
+			t.Fatal(err)
 			return
 		}
 
