@@ -167,6 +167,15 @@ jobs:
       - name: git checkout
         uses: actions/checkout@v3
 
+      - name: git checkout fuzz seed corpus
+        uses: actions/checkout@v3
+        with:
+          repository: morehouse/lnd-fuzz-seed-corpus
+          path: fuzz-seed-corpus
+
+      - name: rsync fuzz seed corpus
+        run: rsync -a --ignore-existing fuzz-seed-corpus/ ./
+
       - name: setup go ${{ env.GO_VERSION }}
         uses: ./.github/actions/setup-go
         with:
