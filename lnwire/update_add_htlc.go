@@ -72,6 +72,12 @@ type UpdateAddHTLC struct {
 	// next hop for this htlc.
 	BlindingPoint BlindingPointRecord
 
+	// Endorsed indicates whether an experimental endorsement signal is
+	// included with this HTLC. Note that this value is obtained from
+	// ExtraData on decoding, and packed into ExtraData on encoding for
+	// easy access.
+	Endorsed EndorsementSignal
+
 	// ExtraData is the set of data that was appended to this message to
 	// fill out the full maximum transport message size. These fields can
 	// be used to specify optional data such as custom TLV fields.
@@ -105,7 +111,7 @@ func (c *UpdateAddHTLC) Decode(r io.Reader, pver uint32) error {
 	}
 
 	blindingRecord := c.BlindingPoint.Zero()
-	tlvMap, err := c.ExtraData.ExtractRecords(&blindingRecord)
+	tlvMap, err := c.ExtraData.ExtractRecords(&blindingRecord, &c.Endorsed)
 	if err != nil {
 		return err
 	}
@@ -160,6 +166,7 @@ func (c *UpdateAddHTLC) Encode(w *bytes.Buffer, pver uint32) error {
 
 		records = append(records, &b)
 	})
+	records = append(records, &c.Endorsed)
 
 	err := EncodeMessageExtraData(&c.ExtraData, records...)
 	if err != nil {
@@ -183,4 +190,59 @@ func (c *UpdateAddHTLC) MsgType() MessageType {
 // NOTE: Part of peer.LinkUpdater interface.
 func (c *UpdateAddHTLC) TargetChanID() ChannelID {
 	return c.ChanID
+}
+
+// EndorsedHTLCExperimental is the TLV number for experimental HTLC
+// endorsement signaling.
+// See: https://github.com/lightning/blips/pull/27
+const EndorsedHTLCExperimental tlv.Type = 65555
+
+// EndorsementSignal is an alias that allows implementing the RecordProducer
+// interface on a boolean.
+type EndorsementSignal bool
+
+// NewEndorsedRecord creates a TLV record for a single-byte endorsement record.
+func (e *EndorsementSignal) Record() tlv.Record {
+	// Note: byte is an alias for uint8 in go, so we can re-use its
+	// encoding/decoding functions then convert back to our boolean value.
+	return tlv.MakeStaticRecord(
+		EndorsedHTLCExperimental, e, 1,
+		func(w io.Writer, val interface{}, buf *[8]byte) error {
+			if v, ok := val.(*EndorsementSignal); ok {
+				// Convert boolean value to a single byte.
+				var endorsedByte byte
+				if *v {
+					endorsedByte = 1
+				}
+
+				return tlv.EUint8(w, &endorsedByte, buf)
+			}
+
+			return tlv.NewTypeForEncodingErr(val, "*bool")
+		},
+		func(r io.Reader, val interface{}, buf *[8]byte,
+			l uint64) error {
+
+			if v, ok := val.(*EndorsementSignal); ok && l == 1 {
+				var endorsedByte byte
+
+				err := tlv.DUint8(r, &endorsedByte, buf, l)
+				if err != nil {
+					return err
+				}
+
+				// Interpret any non-zero value as a positive
+				// endorsement.
+				if endorsedByte == 0x0 {
+					*v = false
+				} else {
+					*v = true
+				}
+
+				return nil
+			}
+
+			return tlv.NewTypeForDecodingErr(val, "*bool", l, 1)
+		},
+	)
 }
