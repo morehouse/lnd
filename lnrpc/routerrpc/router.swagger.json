@@ -1358,6 +1358,15 @@
         }
       }
     },
+    "routerrpcHTLCEndorsement": {
+      "type": "string",
+      "enum": [
+        "ENDORSEMENT_UNKNOWN",
+        "ENDORSEMENT_TRUE",
+        "ENDORSEMENT_FALSE"
+      ],
+      "default": "ENDORSEMENT_UNKNOWN"
+    },
     "routerrpcHtlcEvent": {
       "type": "object",
       "properties": {
@@ -1808,6 +1817,10 @@
         "cancelable": {
           "type": "boolean",
           "description": "If set, the payment loop can be interrupted by manually canceling the\npayment context, even before the payment timeout is reached. Note that the\npayment may still succeed after cancellation, as in-flight attempts can\nstill settle afterwards. Canceling will only prevent further attempts from\nbeing sent."
+        },
+        "endorsed": {
+          "$ref": "#/definitions/routerrpcHTLCEndorsement",
+          "description": "EXPERIMENTAL: Field may be subject to change.\n\nSignals whether to endorse the outgoing payment."
         }
       }
     },
