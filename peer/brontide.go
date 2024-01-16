@@ -2049,9 +2049,9 @@ func messageSummary(msg lnwire.Message) string {
 		)
 
 		return fmt.Sprintf("chan_id=%v, id=%v, amt=%v, expiry=%v, "+
-			"hash=%x, blinding_point=%x", msg.ChanID, msg.ID,
+			"hash=%x, blinding_point=%x, endorsed=%v", msg.ChanID, msg.ID,
 			msg.Amount, msg.Expiry, msg.PaymentHash[:],
-			blindingPoint)
+			blindingPoint, msg.Endorsed)
 
 	case *lnwire.UpdateFailHTLC:
 		return fmt.Sprintf("chan_id=%v, id=%v, reason=%x", msg.ChanID,
