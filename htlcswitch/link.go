@@ -3433,6 +3433,12 @@ func (l *channelLink) processRemoteAdds(fwdPkg *channeldb.FwdPkg,
 					Amount:        fwdInfo.AmountToForward,
 					PaymentHash:   pd.RHash,
 					BlindingPoint: fwdInfo.NextBlinding,
+					// Note: we simply copy endorsement
+					// signal from the incoming link to
+					// propagate the experimental signal.
+					Endorsed: lnwire.EndorsementSignal(
+						pd.IncomingEndorsed,
+					),
 				}
 
 				// Finally, we'll encode the onion packet for
@@ -3479,6 +3485,12 @@ func (l *channelLink) processRemoteAdds(fwdPkg *channeldb.FwdPkg,
 				Amount:        fwdInfo.AmountToForward,
 				PaymentHash:   pd.RHash,
 				BlindingPoint: fwdInfo.NextBlinding,
+				// Note: we simply copy endorsement signal
+				// from the incoming link to propagate the
+				// experimental signal.
+				Endorsed: lnwire.EndorsementSignal(
+					pd.IncomingEndorsed,
+				),
 			}
 
 			// Finally, we'll encode the onion packet for the
