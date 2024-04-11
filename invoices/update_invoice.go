@@ -222,13 +222,14 @@ func addHTLCs(invoice *Invoice, hash *lntypes.Hash, updateTime time.Time,
 		}
 
 		htlc := &InvoiceHTLC{
-			Amt:           htlcUpdate.Amt,
-			MppTotalAmt:   htlcUpdate.MppTotalAmt,
-			Expiry:        htlcUpdate.Expiry,
-			AcceptHeight:  uint32(htlcUpdate.AcceptHeight),
-			AcceptTime:    updateTime,
-			State:         HtlcStateAccepted,
-			CustomRecords: htlcUpdate.CustomRecords,
+			Amt:              htlcUpdate.Amt,
+			MppTotalAmt:      htlcUpdate.MppTotalAmt,
+			Expiry:           htlcUpdate.Expiry,
+			AcceptHeight:     uint32(htlcUpdate.AcceptHeight),
+			AcceptTime:       updateTime,
+			State:            HtlcStateAccepted,
+			CustomRecords:    htlcUpdate.CustomRecords,
+			IncomingEndorsed: htlcUpdate.IncomingEndorsed,
 		}
 
 		if invoiceIsAMP {
