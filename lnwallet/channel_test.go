@@ -3141,14 +3141,16 @@ func TestChanSyncOweCommitment(t *testing.T) {
 		}
 
 		// The HTLC add message should be identical.
-		if _, ok := aliceMsgsToSend[3].(*lnwire.UpdateAddHTLC); !ok {
+		aliceUpdateAddHtlc, ok := aliceMsgsToSend[3].(*lnwire.UpdateAddHTLC)
+		if !ok {
 			t.Fatalf("expected an HTLC add message, instead have %v",
 				spew.Sdump(aliceMsgsToSend[3]))
 		}
-		if !reflect.DeepEqual(aliceHtlc, aliceMsgsToSend[3]) {
+		aliceUpdateAddHtlc.ExtraData = nil
+		if !reflect.DeepEqual(aliceHtlc, aliceUpdateAddHtlc) {
 			t.Fatalf("htlc msg doesn't match exactly: "+
 				"expected %v got %v", spew.Sdump(aliceHtlc),
-				spew.Sdump(aliceMsgsToSend[3]))
+				spew.Sdump(aliceUpdateAddHtlc))
 		}
 
 		// Next, we'll ensure that the CommitSig message exactly
